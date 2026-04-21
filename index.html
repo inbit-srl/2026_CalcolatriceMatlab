@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e1e1e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>π Calc</title>
+<script src="math.min.js"></script>
+<style>
+  :root {
+    --bg: #1e1e1e;
+    --fg: #e0e0e0;
+    --prompt: #4ec9b0;
+    --result: #dcdcaa;
+    --error: #f48771;
+    --muted: #808080;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Consolas", "Menlo", "Courier New", monospace;
+    font-size: 14px;
+  }
+  #shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 12px;
+  }
+  #history {
+    flex: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .line-input { color: var(--fg); }
+  .line-input .prompt { color: var(--prompt); font-weight: bold; }
+  .line-result { color: var(--result); margin-bottom: 6px; }
+  .line-error { color: var(--error); margin-bottom: 6px; }
+  .line-info { color: var(--muted); margin-bottom: 6px; }
+  #input-row {
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #333;
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+  #prompt-label {
+    color: var(--prompt);
+    font-weight: bold;
+    margin-right: 6px;
+  }
+  #cmd {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: inherit;
+  }
+</style>
+</head>
+<body>
+<div id="shell">
+  <div id="history"></div>
+  <div id="input-row">
+    <span id="prompt-label">&gt;&gt;</span>
+    <input id="cmd" type="text" autocomplete="off" autofocus spellcheck="false">
+  </div>
+</div>
+<script>
+  const historyEl = document.getElementById('history');
+  const cmdEl = document.getElementById('cmd');
+
+  const parser = math.parser();
+  parser.set('i', math.complex(0, 1));
+
+  const cmdHistory = [];
+  let historyIdx = -1;
+  let draft = '';
+
+  function appendLine(text, cls) {
+    const div = document.createElement('div');
+    div.className = cls;
+    div.textContent = text;
+    historyEl.appendChild(div);
+    historyEl.scrollTop = historyEl.scrollHeight;
+  }
+
+  function appendInput(text) {
+    const div = document.createElement('div');
+    div.className = 'line-input';
+    const p = document.createElement('span');
+    p.className = 'prompt';
+    p.textContent = '>> ';
+    div.appendChild(p);
+    div.appendChild(document.createTextNode(text));
+    historyEl.appendChild(div);
+  }
+
+  function formatValue(v) {
+    if (v === undefined) return '';
+    if (typeof v === 'function') return '[function]';
+    return math.format(v, { precision: 10 });
+  }
+
+  function evalInput(raw) {
+    const src = raw.trim();
+    if (!src) return;
+    appendInput(raw);
+
+    if (src === 'clc' || src === 'clear') {
+      historyEl.innerHTML = '';
+      return;
+    }
+    if (src === 'help') {
+      appendLine(
+        'Operatori: + - * / ^  |  i = unità immaginaria\n' +
+        'Funzioni: sqrt, exp, log, log10, sin, cos, tan, asin, acos, atan, abs, arg, conj, re, im, round, floor, ceil\n' +
+        'Costanti: pi, e\n' +
+        'Variabile "ans" = ultimo risultato\n' +
+        'Comandi: clc / clear (pulisci), help',
+        'line-info'
+      );
+      return;
+    }
+
+    const suppress = src.endsWith(';');
+    const expr = suppress ? src.slice(0, -1) : src;
+
+    try {
+      const result = parser.evaluate(expr);
+      if (result !== undefined) parser.set('ans', result);
+      if (!suppress && result !== undefined) {
+        appendLine('ans = ' + formatValue(result), 'line-result');
+      }
+    } catch (err) {
+      appendLine('Errore: ' + err.message, 'line-error');
+    }
+  }
+
+  cmdEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const v = cmdEl.value;
+      if (v.trim()) {
+        cmdHistory.push(v);
+        historyIdx = cmdHistory.length;
+      }
+      evalInput(v);
+      cmdEl.value = '';
+      draft = '';
+    } else if (e.key === 'ArrowUp') {
+      if (historyIdx > 0) {
+        if (historyIdx === cmdHistory.length) draft = cmdEl.value;
+        historyIdx--;
+        cmdEl.value = cmdHistory[historyIdx];
+        setTimeout(() => cmdEl.setSelectionRange(cmdEl.value.length, cmdEl.value.length), 0);
+      }
+      e.preventDefault();
+    } else if (e.key === 'ArrowDown') {
+      if (historyIdx < cmdHistory.length - 1) {
+        historyIdx++;
+        cmdEl.value = cmdHistory[historyIdx];
+      } else if (historyIdx === cmdHistory.length - 1) {
+        historyIdx = cmdHistory.length;
+        cmdEl.value = draft;
+      }
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (window.getSelection().toString() === '') cmdEl.focus();
+  });
+
+  appendLine('Calcolatrice in stile MATLAB — digita "help" per la lista dei comandi.', 'line-info');
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch((err) => {
+        console.warn('Service worker registration failed:', err);
+      });
+    });
+  }
+</script>
+</body>
+</html>
