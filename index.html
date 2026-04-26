@@ -10,410 +10,329 @@
 <title>π Calc</title>
 <script src="math.min.js"></script>
 <style>
-  :root {
-    --bg: #1e1e1e;
-    --fg: #e0e0e0;
-    --prompt: #4ec9b0;
-    --result: #dcdcaa;
-    --error: #f48771;
-    --muted: #808080;
-  }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0;
-    height: 100%;
-    overflow: hidden;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: "Consolas", "Menlo", "Courier New", monospace;
-    font-size: 14px;
-  }
-  #shell {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    height: 100dvh;
-    padding: 12px;
-  }
-  #history {
-    flex: 1 1 0;
-    min-height: 0;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .line-input { color: var(--fg); }
-  .line-input .prompt { color: var(--prompt); font-weight: bold; }
-  .line-result { color: var(--result); margin-bottom: 6px; }
-  .line-error { color: var(--error); margin-bottom: 6px; }
-  .line-info { color: var(--muted); margin-bottom: 6px; }
-  #input-row {
-    display: flex;
-    align-items: center;
-    border-top: 1px solid #333;
-    padding-top: 8px;
-    margin-top: 8px;
-  }
-  #prompt-label {
-    color: var(--prompt);
-    font-weight: bold;
-    margin-right: 6px;
-  }
-  #cmd {
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--fg);
-    font-family: inherit;
-    font-size: inherit;
-  }
-
-  #keypad {
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 8px;
-  }
-  #keypad-tabs {
-    display: flex;
-    gap: 4px;
-  }
-  .tab-btn {
-    flex: 1;
-    background: #2a2a2a;
-    color: var(--muted);
-    border: 1px solid #333;
-    padding: 12px 6px;
-    font-family: inherit;
-    font-size: 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .tab-btn.active {
-    background: #333;
-    color: var(--prompt);
-    border-color: var(--prompt);
-  }
-  .kb-panel {
-    display: none;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 4px;
-  }
-  .kb-panel.active { display: grid; }
-  .key {
-    background: #2a2a2a;
-    color: var(--fg);
-    border: 1px solid #3a3a3a;
-    padding: 12px 0;
-    font-family: inherit;
-    font-size: 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  .key:active { background: #444; }
-  .key.op     { color: var(--prompt); }
-  .key.fn     { font-size: 13px; color: var(--result); }
-  .key.back   { color: var(--error); }
-  .key.enter  { background: var(--prompt); color: #1e1e1e; font-weight: bold; }
-
-  @media (pointer: coarse), (max-width: 720px) {
-    #keypad { display: flex; }
-  }
+:root {
+--bg: #1e1e1e;
+--fg: #e0e0e0;
+--prompt: #4ec9b0;
+--result: #dcdcaa;
+--error: #f48771;
+--muted: #808080;
+}
+* { box-sizing: border-box; }
+html, body {
+margin: 0; padding: 0;
+height: 100%;
+overflow: hidden;
+background: var(--bg);
+color: var(--fg);
+font-family: "Consolas", "Menlo", "Courier New", monospace;
+font-size: 14px;
+}
+#shell {
+display: flex;
+flex-direction: column;
+height: 100vh;
+height: 100dvh;
+padding: 12px;
+}
+#history {
+flex: 1 1 0;
+min-height: 0;
+overflow-y: auto;
+white-space: pre-wrap;
+word-break: break-word;
+}
+.line-input { color: var(--fg); }
+.line-input .prompt { color: var(--prompt); font-weight: bold; }
+.line-result { color: var(--result); margin-bottom: 6px; }
+.line-error { color: var(--error); margin-bottom: 6px; }
+.line-info { color: var(--muted); margin-bottom: 6px; }
+#input-row {
+display: flex;
+align-items: center;
+border-top: 1px solid #333;
+padding-top: 8px;
+margin-top: 8px;
+}
+#prompt-label {
+color: var(--prompt);
+font-weight: bold;
+margin-right: 6px;
+}
+#cmd {
+flex: 1;
+background: transparent;
+border: none;
+outline: none;
+color: var(--fg);
+font-family: inherit;
+font-size: inherit;
+}
+#keypad {
+display: none;
+grid-template-columns: repeat(5, 1fr);
+gap: 4px;
+margin-top: 8px;
+}
+.key {
+background: #2a2a2a;
+color: var(--fg);
+border: 1px solid #3a3a3a;
+padding: 12px 0;
+font-family: inherit;
+font-size: 16px;
+border-radius: 4px;
+cursor: pointer;
+user-select: none;
+-webkit-tap-highlight-color: transparent;
+touch-action: manipulation;
+}
+.key:active { background: #444; }
+.key.op { color: var(--prompt); }
+.key.fn { font-size: 13px; color: var(--result); }
+.key.back { color: var(--error); }
+.key.enter { background: var(--prompt); color: #1e1e1e; font-weight: bold; }
+@media (pointer: coarse), (max-width: 720px) {
+#keypad { display: grid; }
+}
 </style>
 </head>
 <body>
 <div id="shell">
-  <div id="history"></div>
-  <div id="input-row">
-    <span id="prompt-label">&gt;&gt;</span>
-    <input id="cmd" type="text" autocomplete="off" autofocus spellcheck="false" autocapitalize="off">
-  </div>
-  <div id="keypad">
-    <div id="keypad-tabs">
-      <button class="tab-btn active" data-panel="num" type="button">123</button>
-      <button class="tab-btn" data-panel="fn" type="button">fn</button>
-    </div>
-    <div class="kb-panel active" data-panel="num">
-      <button class="key op" data-insert="pi">π</button>
-      <button class="key op" data-insert="i">i</button>
-      <button class="key op" data-insert="(">(</button>
-      <button class="key op" data-insert=")">)</button>
-      <button class="key back" data-action="clc">CLC</button>
-
-      <button class="key" data-insert="7">7</button>
-      <button class="key" data-insert="8">8</button>
-      <button class="key" data-insert="9">9</button>
-      <button class="key op" data-insert="/">/</button>
-      <button class="key back" data-action="backspace">⌫</button>
-
-      <button class="key" data-insert="4">4</button>
-      <button class="key" data-insert="5">5</button>
-      <button class="key" data-insert="6">6</button>
-      <button class="key op" data-insert="*">*</button>
-      <button class="key op" data-insert="^">^</button>
-
-      <button class="key" data-insert="1">1</button>
-      <button class="key" data-insert="2">2</button>
-      <button class="key" data-insert="3">3</button>
-      <button class="key op" data-insert="-">-</button>
-      <button class="key enter" data-action="enter" style="grid-row: span 2">↵</button>
-
-      <button class="key" data-insert="0">0</button>
-      <button class="key" data-insert=".">.</button>
-      <button class="key op" data-insert="ans">ans</button>
-      <button class="key op" data-insert="+">+</button>
-    </div>
-    <div class="kb-panel" data-panel="fn">
-      <button class="key fn" data-insert="sqrt(">sqrt</button>
-      <button class="key fn" data-insert="exp(">exp</button>
-      <button class="key fn" data-insert="log(">log</button>
-      <button class="key fn" data-insert="abs(">abs</button>
-      <button class="key back" data-action="backspace">⌫</button>
-
-      <button class="key fn" data-insert="sin(">sin</button>
-      <button class="key fn" data-insert="cos(">cos</button>
-      <button class="key fn" data-insert="tan(">tan</button>
-      <button class="key op" data-insert="pi">π</button>
-      <button class="key op" data-insert="i">i</button>
-
-      <button class="key fn" data-insert="asin(">asin</button>
-      <button class="key fn" data-insert="acos(">acos</button>
-      <button class="key fn" data-insert="atan(">atan</button>
-      <button class="key fn" data-insert="ans">ans</button>
-      <button class="key op" data-insert=";">;</button>
-
-      <button class="key op" data-action="left">←</button>
-      <button class="key op" data-action="right">→</button>
-      <button class="key op" data-insert="(">(</button>
-      <button class="key op" data-insert=")">)</button>
-      <button class="key enter" data-action="enter">↵</button>
-    </div>
-  </div>
+<div id="history"></div>
+<div id="input-row">
+<span id="prompt-label">&gt;&gt;</span>
+<input id="cmd" type="text" autocomplete="off" autofocus spellcheck="false" autocapitalize="off">
 </div>
+
+<div id="keypad">
+<!-- Row 1 -->
+<button class="key op" data-insert="i">i</button>
+<button class="key op" data-insert="pi">π</button>
+<button class="key op" data-insert="(">(</button>
+<button class="key op" data-insert=")">)</button>
+<button class="key op" data-insert="e">e</button>
+
+<!-- Row 2 -->
+<button class="key" data-insert="7">7</button>
+<button class="key" data-insert="8">8</button>
+<button class="key" data-insert="9">9</button>
+<button class="key back" data-action="backspace">Del</button>
+<button class="key back" data-action="clc">AC</button>
+
+<!-- Row 3 -->
+<button class="key" data-insert="4">4</button>
+<button class="key" data-insert="5">5</button>
+<button class="key" data-insert="6">6</button>
+<button class="key op" data-insert="*">×</button>
+<button class="key op" data-insert="/">÷</button>
+
+<!-- Row 4 -->
+<button class="key" data-insert="1">1</button>
+<button class="key" data-insert="2">2</button>
+<button class="key" data-insert="3">3</button>
+<button class="key op" data-insert="+">+</button>
+<button class="key op" data-insert="-">−</button>
+
+<!-- Row 5 -->
+<button class="key" data-insert="0">0</button>
+<button class="key" data-insert=".">.</button>
+<button class="key op" data-insert="e">Exp</button>
+<button class="key op" data-insert="ans">Ans</button>
+<button class="key enter" data-action="enter">Ret</button>
+</div>
+</div>
+
 <script>
-  const historyEl = document.getElementById('history');
-  const cmdEl = document.getElementById('cmd');
+const historyEl = document.getElementById('history');
+const cmdEl = document.getElementById('cmd');
+const parser = math.parser();
+parser.set('i', math.complex(0, 1));
 
-  const parser = math.parser();
-  parser.set('i', math.complex(0, 1));
+const cmdHistory = [];
+let historyIdx = -1;
+let draft = '';
 
-  const cmdHistory = [];
-  let historyIdx = -1;
-  let draft = '';
+function appendLine(text, cls) {
+const div = document.createElement('div');
+div.className = cls;
+div.textContent = text;
+historyEl.appendChild(div);
+historyEl.scrollTop = historyEl.scrollHeight;
+}
+function appendInput(text) {
+const div = document.createElement('div');
+div.className = 'line-input';
+const p = document.createElement('span');
+p.className = 'prompt';
+p.textContent = '>> ';
+div.appendChild(p);
+div.appendChild(document.createTextNode(text));
+historyEl.appendChild(div);
+}
+function formatValue(v) {
+if (v === undefined) return '';
+if (typeof v === 'function') return '[function]';
+return math.format(v, { precision: 10 });
+}
+function evalInput(raw) {
+const src = raw.trim();
+if (!src) return;
+appendInput(raw);
+if (src === 'clc' || src === 'clear') {
+historyEl.innerHTML = '';
+return;
+}
+if (src === 'help') {
+appendLine(
+'Operatori: + - * / ^ | i = unità immaginaria\n' +
+'Funzioni: sqrt, exp, log, log10, sin, cos, tan, asin, acos, atan, abs, arg, conj, re, im, round, floor, ceil\n' +
+'Costanti: pi, e\n' +
+'Variabile "ans" = ultimo risultato\n' +
+'Comandi: clc / clear (pulisci), help',
+'line-info'
+);
+return;
+}
+const suppress = src.endsWith(';');
+const expr = suppress ? src.slice(0, -1) : src;
+try {
+const result = parser.evaluate(expr);
+if (result !== undefined) parser.set('ans', result);
+if (!suppress && result !== undefined) {
+appendLine('ans = ' + formatValue(result), 'line-result');
+}
+} catch (err) {
+appendLine('Errore: ' + err.message, 'line-error');
+}
+}
+function submit() {
+const v = cmdEl.value;
+if (v.trim()) {
+cmdHistory.push(v);
+historyIdx = cmdHistory.length;
+}
+evalInput(v);
+cmdEl.value = '';
+draft = '';
+}
+cmdEl.addEventListener('keydown', (e) => {
+if (e.key === 'Enter') {
+submit();
+} else if (e.key === 'ArrowUp') {
+if (historyIdx > 0) {
+if (historyIdx === cmdHistory.length) draft = cmdEl.value;
+historyIdx--;
+cmdEl.value = cmdHistory[historyIdx];
+setTimeout(() => cmdEl.setSelectionRange(cmdEl.value.length, cmdEl.value.length), 0);
+}
+e.preventDefault();
+} else if (e.key === 'ArrowDown') {
+if (historyIdx < cmdHistory.length - 1) {
+historyIdx++;
+cmdEl.value = cmdHistory[historyIdx];
+} else if (historyIdx === cmdHistory.length - 1) {
+historyIdx = cmdHistory.length;
+cmdEl.value = draft;
+}
+e.preventDefault();
+}
+});
+document.addEventListener('click', (e) => {
+if (e.target.closest('#keypad')) return;
+if (window.getSelection().toString() === '') cmdEl.focus();
+});
 
-  function appendLine(text, cls) {
-    const div = document.createElement('div');
-    div.className = cls;
-    div.textContent = text;
-    historyEl.appendChild(div);
-    historyEl.scrollTop = historyEl.scrollHeight;
-  }
+// --- On-screen keypad ---
+const keypad = document.getElementById('keypad');
+const isTouch = window.matchMedia('(pointer: coarse)').matches;
+if (isTouch) cmdEl.setAttribute('inputmode', 'none');
 
-  function appendInput(text) {
-    const div = document.createElement('div');
-    div.className = 'line-input';
-    const p = document.createElement('span');
-    p.className = 'prompt';
-    p.textContent = '>> ';
-    div.appendChild(p);
-    div.appendChild(document.createTextNode(text));
-    historyEl.appendChild(div);
-  }
+function insertAtCursor(text) {
+const start = cmdEl.selectionStart ?? cmdEl.value.length;
+const end = cmdEl.selectionEnd ?? cmdEl.value.length;
+const val = cmdEl.value;
+cmdEl.value = val.slice(0, start) + text + val.slice(end);
+const pos = start + text.length;
+cmdEl.setSelectionRange(pos, pos);
+}
+function backspaceAtCursor() {
+const start = cmdEl.selectionStart ?? cmdEl.value.length;
+const end = cmdEl.selectionEnd ?? cmdEl.value.length;
+const val = cmdEl.value;
+if (start === end) {
+if (start > 0) {
+cmdEl.value = val.slice(0, start - 1) + val.slice(end);
+cmdEl.setSelectionRange(start - 1, start - 1);
+}
+} else {
+cmdEl.value = val.slice(0, start) + val.slice(end);
+cmdEl.setSelectionRange(start, start);
+}
+}
 
-  function formatValue(v) {
-    if (v === undefined) return '';
-    if (typeof v === 'function') return '[function]';
-    return math.format(v, { precision: 10 });
-  }
+// preventDefault on mousedown keeps focus in the input so the cursor doesn't jump
+keypad.addEventListener('mousedown', (e) => {
+if (e.target.closest('button')) e.preventDefault();
+});
 
-  function evalInput(raw) {
-    const src = raw.trim();
-    if (!src) return;
-    appendInput(raw);
+const canVibrate = 'vibrate' in navigator;
+if (canVibrate) {
+// Warmup: il primo vibrate() può avere latenza; un no-op iniziale azzera il cold-start.
+window.addEventListener('touchstart', () => navigator.vibrate(0), { once: true, passive: true });
+keypad.querySelectorAll('button').forEach((btn) => {
+btn.addEventListener('touchstart', () => navigator.vibrate(10), { passive: true });
+});
+}
 
-    if (src === 'clc' || src === 'clear') {
-      historyEl.innerHTML = '';
-      return;
-    }
-    if (src === 'help') {
-      appendLine(
-        'Operatori: + - * / ^  |  i = unità immaginaria\n' +
-        'Funzioni: sqrt, exp, log, log10, sin, cos, tan, asin, acos, atan, abs, arg, conj, re, im, round, floor, ceil\n' +
-        'Costanti: pi, e\n' +
-        'Variabile "ans" = ultimo risultato\n' +
-        'Comandi: clc / clear (pulisci), help',
-        'line-info'
-      );
-      return;
-    }
+keypad.addEventListener('click', (e) => {
+const btn = e.target.closest('button');
+if (!btn) return;
+const insert = btn.dataset.insert;
+const action = btn.dataset.action;
+if (insert !== undefined) insertAtCursor(insert);
+// backspace is handled on pointerdown for long-press auto-repeat
+else if (action === 'clc') { historyEl.innerHTML = ''; cmdEl.value = ''; }
+else if (action === 'enter') { submit(); return; }
+cmdEl.focus();
+});
 
-    const suppress = src.endsWith(';');
-    const expr = suppress ? src.slice(0, -1) : src;
+// Long-press auto-repeat on backspace
+let backspaceDelayTimer = null;
+let backspaceRepeatTimer = null;
+function stopBackspaceRepeat() {
+clearTimeout(backspaceDelayTimer);
+clearInterval(backspaceRepeatTimer);
+backspaceDelayTimer = backspaceRepeatTimer = null;
+}
+keypad.querySelectorAll('[data-action="backspace"]').forEach((btn) => {
+btn.addEventListener('pointerdown', (e) => {
+e.preventDefault();
+backspaceAtCursor();
+cmdEl.focus();
+stopBackspaceRepeat();
+backspaceDelayTimer = setTimeout(() => {
+backspaceRepeatTimer = setInterval(() => {
+if (cmdEl.value.length === 0) { stopBackspaceRepeat(); return; }
+backspaceAtCursor();
+if (canVibrate) navigator.vibrate(5);
+}, 60);
+}, 400);
+});
+['pointerup', 'pointerleave', 'pointercancel'].forEach((evt) =>
+btn.addEventListener(evt, stopBackspaceRepeat)
+);
+});
 
-    try {
-      const result = parser.evaluate(expr);
-      if (result !== undefined) parser.set('ans', result);
-      if (!suppress && result !== undefined) {
-        appendLine('ans = ' + formatValue(result), 'line-result');
-      }
-    } catch (err) {
-      appendLine('Errore: ' + err.message, 'line-error');
-    }
-  }
+appendLine('Calcolatrice in stile MATLAB — digita "help" per la lista dei comandi.', 'line-info');
 
-  function submit() {
-    const v = cmdEl.value;
-    if (v.trim()) {
-      cmdHistory.push(v);
-      historyIdx = cmdHistory.length;
-    }
-    evalInput(v);
-    cmdEl.value = '';
-    draft = '';
-  }
-
-  cmdEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      submit();
-    } else if (e.key === 'ArrowUp') {
-      if (historyIdx > 0) {
-        if (historyIdx === cmdHistory.length) draft = cmdEl.value;
-        historyIdx--;
-        cmdEl.value = cmdHistory[historyIdx];
-        setTimeout(() => cmdEl.setSelectionRange(cmdEl.value.length, cmdEl.value.length), 0);
-      }
-      e.preventDefault();
-    } else if (e.key === 'ArrowDown') {
-      if (historyIdx < cmdHistory.length - 1) {
-        historyIdx++;
-        cmdEl.value = cmdHistory[historyIdx];
-      } else if (historyIdx === cmdHistory.length - 1) {
-        historyIdx = cmdHistory.length;
-        cmdEl.value = draft;
-      }
-      e.preventDefault();
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('#keypad')) return;
-    if (window.getSelection().toString() === '') cmdEl.focus();
-  });
-
-  // --- On-screen keypad ---
-  const keypad = document.getElementById('keypad');
-  const isTouch = window.matchMedia('(pointer: coarse)').matches;
-  if (isTouch) cmdEl.setAttribute('inputmode', 'none');
-
-  function insertAtCursor(text) {
-    const start = cmdEl.selectionStart ?? cmdEl.value.length;
-    const end = cmdEl.selectionEnd ?? cmdEl.value.length;
-    const val = cmdEl.value;
-    cmdEl.value = val.slice(0, start) + text + val.slice(end);
-    const pos = start + text.length;
-    cmdEl.setSelectionRange(pos, pos);
-  }
-  function backspaceAtCursor() {
-    const start = cmdEl.selectionStart ?? cmdEl.value.length;
-    const end = cmdEl.selectionEnd ?? cmdEl.value.length;
-    const val = cmdEl.value;
-    if (start === end) {
-      if (start > 0) {
-        cmdEl.value = val.slice(0, start - 1) + val.slice(end);
-        cmdEl.setSelectionRange(start - 1, start - 1);
-      }
-    } else {
-      cmdEl.value = val.slice(0, start) + val.slice(end);
-      cmdEl.setSelectionRange(start, start);
-    }
-  }
-  function moveCursor(delta) {
-    const pos = (cmdEl.selectionStart ?? 0) + delta;
-    const clamped = Math.max(0, Math.min(cmdEl.value.length, pos));
-    cmdEl.setSelectionRange(clamped, clamped);
-  }
-
-  // preventDefault on mousedown keeps focus in the input so the cursor doesn't jump
-  keypad.addEventListener('mousedown', (e) => {
-    if (e.target.closest('button')) e.preventDefault();
-  });
-
-  const canVibrate = 'vibrate' in navigator;
-  if (canVibrate) {
-    // Warmup: il primo vibrate() può avere latenza; un no-op iniziale azzera il cold-start.
-    window.addEventListener('touchstart', () => navigator.vibrate(0), { once: true, passive: true });
-    keypad.querySelectorAll('button').forEach((btn) => {
-      btn.addEventListener('touchstart', () => navigator.vibrate(10), { passive: true });
-    });
-  }
-
-  keypad.addEventListener('click', (e) => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-
-    if (btn.classList.contains('tab-btn')) {
-      const panel = btn.dataset.panel;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
-      document.querySelectorAll('.kb-panel').forEach(p =>
-        p.classList.toggle('active', p.dataset.panel === panel)
-      );
-      cmdEl.focus();
-      return;
-    }
-
-    const insert = btn.dataset.insert;
-    const action = btn.dataset.action;
-    if (insert !== undefined) insertAtCursor(insert);
-    // backspace is handled on pointerdown for long-press auto-repeat
-    else if (action === 'left')  moveCursor(-1);
-    else if (action === 'right') moveCursor(+1);
-    else if (action === 'clc')   { historyEl.innerHTML = ''; cmdEl.value = ''; }
-    else if (action === 'enter') { submit(); return; }
-    cmdEl.focus();
-  });
-
-  // Long-press auto-repeat on backspace
-  let backspaceDelayTimer = null;
-  let backspaceRepeatTimer = null;
-  function stopBackspaceRepeat() {
-    clearTimeout(backspaceDelayTimer);
-    clearInterval(backspaceRepeatTimer);
-    backspaceDelayTimer = backspaceRepeatTimer = null;
-  }
-  keypad.querySelectorAll('[data-action="backspace"]').forEach((btn) => {
-    btn.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      backspaceAtCursor();
-      cmdEl.focus();
-      stopBackspaceRepeat();
-      backspaceDelayTimer = setTimeout(() => {
-        backspaceRepeatTimer = setInterval(() => {
-          if (cmdEl.value.length === 0) { stopBackspaceRepeat(); return; }
-          backspaceAtCursor();
-          if (canVibrate) navigator.vibrate(5);
-        }, 60);
-      }, 400);
-    });
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach((evt) =>
-      btn.addEventListener(evt, stopBackspaceRepeat)
-    );
-  });
-
-  appendLine('Calcolatrice in stile MATLAB — digita "help" per la lista dei comandi.', 'line-info');
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch((err) => {
-        console.warn('Service worker registration failed:', err);
-      });
-    });
-  }
+if ('serviceWorker' in navigator) {
+window.addEventListener('load', () => {
+navigator.serviceWorker.register('sw.js').catch((err) => {
+console.warn('Service worker registration failed:', err);
+});
+});
+}
 </script>
 </body>
 </html>
